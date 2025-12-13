@@ -1,0 +1,2 @@
+image: ghcr.io/your-org/hash-service:latest
+replicas: 1
