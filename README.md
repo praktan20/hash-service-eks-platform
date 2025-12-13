@@ -14,4 +14,8 @@ terraform init
 terraform validate
 terraform plan
 terraform apply
-helm install hash-service helm/hash-service
+## Run Locally
+```bash
+docker build -t fastapi-hash .
+docker run -e DATABASE_URL=postgresql://... -p 8000:8000 fastapi-hash
+kubectl apply -f k8s/
