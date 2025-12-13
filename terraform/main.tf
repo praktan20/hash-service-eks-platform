@@ -1,5 +1,5 @@
 ############################################
-# Provider (Single AZ)
+# Provider (Single AZ / Minimum Cost)
 ############################################
 provider "aws" {
   region = "us-east-1"
@@ -138,6 +138,57 @@ resource "aws_db_instance" "postgres" {
 }
 
 ############################################
+# IAM: EKS Admin Role (for User Authentication)
+############################################
+resource "aws_iam_role" "eks_admin" {
+  name = "hash-service-eks-admin-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Attach AWS managed admin policy (simple + interview friendly)
+resource "aws_iam_role_policy_attachment" "eks_admin_attach" {
+  role       = aws_iam_role.eks_admin.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+############################################
+# EKS Access Entry (IAM → Kubernetes RBAC)
+############################################
+resource "aws_eks_access_entry" "admin" {
+  cluster_name = module.eks.cluster_name
+  principal_arn = aws_iam_role.eks_admin.arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "admin" {
+  cluster_name = module.eks.cluster_name
+  principal_arn = aws_iam_role.eks_admin.arn
+
+  policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+}
+
+############################################
+# Data Sources
+############################################
+data "aws_caller_identity" "current" {}
+
+############################################
 # Outputs
 ############################################
 output "cluster_endpoint" {
@@ -147,4 +198,3 @@ output "cluster_endpoint" {
 output "rds_endpoint" {
   value = aws_db_instance.postgres.address
 }
-
