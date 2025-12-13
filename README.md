@@ -9,5 +9,9 @@
 
 ## Deploy
 ```bash
+
+terraform init
+terraform validate
+terraform plan
 terraform apply
 helm install hash-service helm/hash-service
