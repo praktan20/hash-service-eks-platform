@@ -25,6 +25,7 @@ module "vpc" {
   ]
 
   # ❗ No NAT Gateway (lowest cost)
+  map_public_ip_on_launch = true
   enable_nat_gateway = false
 
   enable_dns_hostnames = true
@@ -36,6 +37,7 @@ module "vpc" {
     Terraform   = "true"
   }
 }
+
 
 ############################################
 # EKS Cluster – Multi AZ (FIXED)
