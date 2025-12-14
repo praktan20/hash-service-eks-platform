@@ -25,9 +25,7 @@ module "vpc" {
   ]
 
   # ❗ No NAT Gateway (lowest cost)
-  map_public_ip_on_launch = true
   enable_nat_gateway = false
-
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -38,6 +36,12 @@ module "vpc" {
   }
 }
 
+# Ensure subnets auto-assign public IP
+resource "aws_subnet_public_ip_on_launch" "enable" {
+  for_each = toset(module.vpc.public_subnets)
+  subnet_id = each.value
+  map_public_ip_on_launch = true
+}
 
 ############################################
 # EKS Cluster – Multi AZ (FIXED)
@@ -175,26 +179,6 @@ resource "aws_iam_role" "eks_admin" {
 resource "aws_iam_role_policy_attachment" "eks_admin_attach" {
   role       = aws_iam_role.eks_admin.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
-}
-
-############################################
-# EKS Access Entry
-############################################
-resource "aws_eks_access_entry" "admin" {
-  cluster_name  = module.eks.cluster_name
-  principal_arn = aws_iam_role.eks_admin.arn
-  type          = "STANDARD"
-}
-
-resource "aws_eks_access_policy_association" "admin" {
-  cluster_name  = module.eks.cluster_name
-  principal_arn = aws_iam_role.eks_admin.arn
-
-  policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-
-  access_scope {
-    type = "cluster"
-  }
 }
 
 ############################################
