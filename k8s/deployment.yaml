@@ -7,19 +7,16 @@ spec:
   selector:
     matchLabels:
       app: fastapi-hash
-template:
-  metadata:
-    labels:
-      app: fastapi-hash
-spec:
-  containers:
-  - name: app
-  image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/fastapi-hash:latest
-  ports:
-  - containerPort: 8000
-  env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: db-secret
-        key: DATABASE_URL
+  template:
+    metadata:
+      labels:
+        app: fastapi-hash
+    spec:
+      containers:
+      - name: app
+        image: 688933601318.dkr.ecr.us-east-2.amazonaws.com/fastapi-hash:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          value: postgresql://hashuser:changeme123@hash-service-postgres.cfum8aocuvri.us-east-2.rds.amazonaws.com:5432/hashdb
