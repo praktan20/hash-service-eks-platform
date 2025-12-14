@@ -23,24 +23,18 @@ module "vpc" {
     "10.0.1.0/24",
     "10.0.2.0/24"
   ]
-
-  # ❗ No NAT Gateway (lowest cost)
+  private_subnets = []
   enable_nat_gateway = false
   enable_dns_hostnames = true
   enable_dns_support   = true
+  map_public_ip_on_launch  = true 
+  create_igw               = true 
 
   tags = {
     Environment = "dev"
     CostModel   = "minimum"
     Terraform   = "true"
   }
-}
-
-# Ensure subnets auto-assign public IP
-resource "aws_subnet_public_ip_on_launch" "enable" {
-  for_each = toset(module.vpc.public_subnets)
-  subnet_id = each.value
-  map_public_ip_on_launch = true
 }
 
 ############################################
@@ -69,7 +63,7 @@ module "eks" {
 
       min_size     = 1
       max_size     = 2
-      desired_size = 1
+      desired_size = 2
 
       capacity_type = "ON_DEMAND"
 
