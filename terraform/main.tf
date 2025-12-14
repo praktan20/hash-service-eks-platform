@@ -2,7 +2,7 @@
 # Provider (Single AZ / Minimum Cost)
 ############################################
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2"
 }
 
 ############################################
@@ -15,7 +15,7 @@ module "vpc" {
   name = "hash-service-vpc"
   cidr = "10.0.0.0/16"
 
-  azs            = ["us-east-1a"]
+  azs            = ["us-east-2a"]
   public_subnets = ["10.0.1.0/24"]
 
   # Cost optimization
