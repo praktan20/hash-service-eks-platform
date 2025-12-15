@@ -161,5 +161,3 @@ kubectl exec -it <pod-name> -n hash-app -- /bin/sh
 MIT License
 
 ---
-
-Do you want me to add that diagram?
