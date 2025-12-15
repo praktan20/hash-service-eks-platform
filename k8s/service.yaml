@@ -1,11 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fastapi-hash-svc
+  name: hash-app-svc
+  namespace: hash-app
 spec:
+  type: LoadBalancer
   selector:
-  app: fastapi-hash
+    app: hash-app
   ports:
-  - port: 80
-    targetPort: 8000
-  type: ClusterIP
+    - port: 80        # Public port
+      targetPort: 8080
+

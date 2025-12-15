@@ -1,22 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fastapi-hash
+  name: hash-app
+  namespace: hash-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: fastapi-hash
+      app: hash-app
   template:
     metadata:
       labels:
-        app: fastapi-hash
+        app: hash-app
     spec:
       containers:
-      - name: app
-        image: 688933601318.dkr.ecr.us-east-2.amazonaws.com/fastapi-hash:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          value: postgresql://hashuser:changeme123@hash-service-postgres.cfum8aocuvri.us-east-2.rds.amazonaws.com:5432/hashdb
+        - name: hash-app
+          image: 688933601318.dkr.ecr.us-east-2.amazonaws.com/fastapi-hash:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://hashuser:changeme123@hash-service-postgres.cfum8aocuvri.us-east-2.rds.amazonaws.com:5432/hashdb"
+          resources:
+            limits:
+              cpu: "100"
+              memory: "100"
+            requests:
+              cpu: "100"
+              memory: "100"
