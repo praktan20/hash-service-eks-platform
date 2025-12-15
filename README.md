@@ -1,114 +1,165 @@
-Hash Service (FastAPI) on EKS
+---
 
-A lightweight FastAPI service that allows you to:
+# 🛡️ Hash Service (FastAPI) on EKS
 
-Store strings and retrieve them using their SHA256 hash.
+A resilient FastAPI microservice built for cloud-native environments, focused on **secure data hashing**, **persistent storage**, and **easy deployment** to **AWS EKS** using **Terraform** and **Kustomize**. 🚀
 
-Persist data using PostgreSQL.
+---
 
-Deploy easily on AWS EKS using Terraform and Kustomize.
+## ✨ Features
 
-Containerized with Docker for reproducibility.
+* 🔹 **Endpoints:** `/store`, `/lookup/{hash}`
+* 🔹 **Persistence:** PostgreSQL RDS for durable storage
+* 🔹 **Containerized:** Docker for portability
+* 🔹 **IaC & GitOps:** Terraform for AWS infra, Kustomize for K8s manifests
 
-Features
+---
 
-Endpoints:
+## 📊 Architecture
 
-Endpoint	Method	Description
-/store	POST	Accepts a string, stores it in PostgreSQL, and returns its SHA256 hash.
-/lookup/{hash}	GET	Returns the original string if the SHA256 hash exists in the database.
+```
+User ➡️ AWS ELB ➡️ EKS FastAPI Pods ➡️ PostgreSQL RDS
+```
 
-Persistence: Data is stored externally in PostgreSQL (RDS) for durability.
+---
 
-Headless Service: No web frontend, API-only.
+## ⚙️ Deployment Guide
 
-Architecture
-User -> ELB -> EKS FastAPI Pods -> PostgreSQL RDS
+### **Requirements**
 
+* ✅ Terraform >= 1.5
+* ✅ AWS CLI configured
+* ✅ kubectl >= 1.32
+* ✅ Docker
+* ✅ Postgres client (psql)
 
-Terraform: Provision VPC, EKS cluster, security groups, and RDS.
+---
 
-Kustomize: Deploy Kubernetes manifests declaratively.
+### **Step 1: Provision Infrastructure (Terraform)**
 
-Docker: Build and run the application locally or in Kubernetes.
-
-Deployment
-1. Provision Infrastructure
+```bash
+cd terraform/  # Navigate to Terraform directory
 terraform init
 terraform validate
 terraform plan
 terraform apply
+```
 
+> ⚠️ Creates VPC, EKS cluster, and RDS PostgreSQL. Use with caution.
 
-This will create:
+---
 
-VPC with public/private subnets
+### **Step 2: Docker Build & Push**
 
-EKS cluster
+1. **Build Docker Image**
 
-Managed node group
+```bash
+docker build -t <your-registry>/fastapi-hash .
+```
 
-RDS PostgreSQL database
+2. **Push to ECR**
 
-2. Deploy Application to EKS
+```bash
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<region>.amazonaws.com
+docker tag fastapi-hash:latest <your-account-id>.dkr.ecr.<region>.amazonaws.com/fastapi-hash:latest
+docker push <your-account-id>.dkr.ecr.<region>.amazonaws.com/fastapi-hash:latest
+```
 
-Build Docker image:
+---
 
-docker build -t fastapi-hash .
+### **Step 3: Deploy to Kubernetes (EKS)**
 
-
-Push image to your ECR (or another registry) and update k8s/deployment.yaml image tag.
-
-Apply Kustomize manifests:
-
+```bash
 kubectl apply -k k8s/
-
-
-Check pods and service:
-
 kubectl get pods -n hash-app
 kubectl get svc -n hash-app
+```
 
+> Note the **EXTERNAL-IP** of the service for accessing the API.
 
-Use the EXTERNAL-IP from the LoadBalancer service to access the API.
+---
 
-3. Test API
+### **Step 4: Verify RDS Table**
 
-Store a string:
+Connect to PostgreSQL:
 
-curl -X POST "http://<EXTERNAL-IP>/store?value=hello"
+```bash
+psql -h <rds-endpoint> -U hashuser -d hashdb
+```
 
+Check table:
 
-Lookup a string by hash:
+```sql
+\dt
+SELECT * FROM strings;
+```
 
-curl "http://<EXTERNAL-IP>/lookup/<SHA256-HASH>"
+> Table `strings` should exist and store SHA256 hash mappings.
 
+---
 
-Swagger UI: http://<EXTERNAL-IP>/docs
+### **Step 5: Test the API**
 
-Run Locally (Optional)
+| Action          | Command                                                 | Response             |
+| --------------- | ------------------------------------------------------- | -------------------- |
+| Store a string  | `curl -X POST "http://<EXTERNAL-IP>/store?value=hello"` | `{"hash":"..."}`     |
+| Lookup a string | `curl "http://<EXTERNAL-IP>/lookup/<SHA256-HASH>"`      | `{"value":"hello"}`  |
+| Swagger UI      | Open `http://<EXTERNAL-IP>/docs`                        | Interactive API docs |
+
+---
+
+### **Step 6: Run Locally**
+
+Requires **local PostgreSQL DB** and `DATABASE_URL` in environment:
+
+```bash
+export DATABASE_URL="postgresql://hashuser:changeme123@localhost:5432/hashdb"
 docker build -t fastapi-hash .
-docker run -p 8080:8080 fastapi-hash
+docker run -p 8080:8080 -e DATABASE_URL=$DATABASE_URL fastapi-hash
+```
 
+Access API: `http://localhost:8080/docs`
 
-Access API: http://localhost:8080/store?value=hello
+---
 
-Lookup: (http://ad0c998b3a26c4677ba20040362efa90-1734251524.us-east-2.elb.amazonaws.com/docs]
+## 🧰 Useful Commands
 
-Requirements
+* **Check Pods**
 
-Terraform >= 1.5
+```bash
+kubectl get pods -n hash-app -o wide
+```
 
-AWS CLI configured with permissions
+* **Check Services**
 
-kubectl >= 1.32
+```bash
+kubectl get svc -n hash-app
+```
 
-Docker
+* **Describe Pod**
 
-PostgreSQL (for local testing)
+```bash
+kubectl describe pod <pod-name> -n hash-app
+```
 
-License
+* **Logs**
+
+```bash
+kubectl logs deploy/hash-app -n hash-app
+```
+
+* **Execute inside Pod**
+
+```bash
+kubectl exec -it <pod-name> -n hash-app -- /bin/sh
+```
+
+---
+
+## ⚖️ License
 
 MIT License
 
-I can also enhance it further with a diagram of EKS + RDS architecture and step-by-step screenshots to make it visually appealing for GitHub.
+---
+
+Do you want me to add that diagram?
