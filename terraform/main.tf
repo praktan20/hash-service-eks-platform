@@ -1,12 +1,12 @@
 ############################################
-# Provider
+#                 Provider
 ############################################
 provider "aws" {
   region = "us-east-2"
 }
 
 ############################################
-# VPC – Multi AZ (Minimum Required for EKS/RDS)
+#                   VPC
 ############################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -38,7 +38,7 @@ module "vpc" {
 }
 
 ############################################
-# EKS Cluster – Multi AZ (FIXED)
+#               EKS Cluster
 ############################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -83,7 +83,7 @@ module "eks" {
 }
 
 ############################################
-# Security Group for RDS
+#          Security Group for RDS
 ############################################
 resource "aws_security_group" "rds" {
   name        = "hash-service-rds-sg"
@@ -106,7 +106,7 @@ resource "aws_security_group" "rds" {
 }
 
 ############################################
-# RDS Subnet Group – Multi AZ (FIXED)
+#           RDS Subnet Group
 ############################################
 resource "aws_db_subnet_group" "postgres" {
   name       = "hash-service-db-subnet-group"
@@ -118,7 +118,7 @@ resource "aws_db_subnet_group" "postgres" {
 }
 
 ############################################
-# RDS PostgreSQL – Single AZ DB, Multi AZ Subnet Group
+#              RDS PostgreSQL
 ############################################
 resource "aws_db_instance" "postgres" {
   identifier = "hash-service-postgres"
@@ -132,7 +132,7 @@ resource "aws_db_instance" "postgres" {
 
   db_name  = "hashdb"
   username = "hashuser"
-  password = "changeme123" # demo only
+  password = "changeme123"
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.postgres.name
@@ -151,7 +151,7 @@ resource "aws_db_instance" "postgres" {
 }
 
 ############################################
-# IAM: EKS Admin Role
+#         IAM: EKS Admin Role
 ############################################
 resource "aws_iam_role" "eks_admin" {
   name = "hash-service-eks-admin-role"
@@ -176,12 +176,12 @@ resource "aws_iam_role_policy_attachment" "eks_admin_attach" {
 }
 
 ############################################
-# Data Sources
+#             Data Sources
 ############################################
 data "aws_caller_identity" "current" {}
 
 ############################################
-# Outputs
+#                Outputs
 ############################################
 output "cluster_endpoint" {
   value = module.eks.cluster_endpoint
